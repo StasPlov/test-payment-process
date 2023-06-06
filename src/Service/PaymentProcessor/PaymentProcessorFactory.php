@@ -2,8 +2,8 @@
 
 namespace App\Service\PaymentProcessor;
 
-use App\Service\Processor\PaymentProcessor\PaypalPaymentProcessor;
-use App\Service\Processor\PaymentProcessor\StripePaymentProcessor;
+use App\Service\PaymentProcessor\Processor\PaypalPaymentProcessor;
+use App\Service\PaymentProcessor\Processor\StripePaymentProcessor;
 
 /**
  * @author Stas Plov <SaviouR.S@email.ru>

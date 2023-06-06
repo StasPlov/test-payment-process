@@ -4,6 +4,7 @@ namespace App\Dto\Pay;
 
 use App\Dto\DtoAbstract;
 use App\Dto\DtoInterface;
+use Symfony\Component\Validator\Constraints as Validator;
 
 /**
  * Base request from 
@@ -12,9 +13,21 @@ use App\Dto\DtoInterface;
  * 
  */
 class RequestDto extends DtoAbstract implements DtoInterface {
+
+	#[Validator\NotBlank()]
+	#[Validator\NotNull()]
     private ?int $product = null;
+
+	#[Validator\NotBlank()]
+	#[Validator\NotNull()]
     private ?string $taxNumber = null;
+
+	#[Validator\NotBlank()]
+	#[Validator\NotNull()]
     private ?string $couponCode = null;
+
+	#[Validator\NotBlank()]
+	#[Validator\NotNull()]
 	private ?string $paymentProcessor = null;
 
 	/**

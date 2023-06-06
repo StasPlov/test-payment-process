@@ -3,79 +3,34 @@
 namespace App\Controller;
 
 use App\Dto\Pay\RequestDto;
-use App\Repository\Sort\Limiter;
-use App\Repository\Sort\OrderBy;
+use App\Entity\Product;
 use App\Service\PaymentProcessor\PaymentProcessorFactory;
 use App\Service\RequestDecoder\RequestDecoderInterface;
+use App\Service\Validator\Annotations\ValidateDto;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
 #[Route(path: '/api')]
 class PaymentController extends AbstractController
 {
-	#[Route(path: '/pay', name: 'api-pay', methods: ['GET'])]
+	#[ValidateDto(class: RequestDto::class)]
+	#[Route(path: '/pay', name: 'api-pay-get', methods: ['GET'])]
 	public function getPay(
 		Request $request,
-		RequestDecoderInterface $requestDecoder,
-		EntityManagerInterface $entityManager,
+		RequestDto $requestDto
 	): Response {
 		try {
+			dd($request);
+
 			/**
-			 * @var RequestDto
+			 * @var Product
 			 */
-			$params = $requestDecoder->decodeDto($request, RequestDto::class);
-			dd($params);
-		
-			$limiter = new Limiter($params->get_limit(), $params->get_offset());
-			$order = new OrderBy($params->get_sortBy(), $params->get_orderBy());
-
-			if ($params->get_nolimit()) {
-				$limiter = null;
-			}
-
-			if (empty($params->get_sortBy()) && empty($params->get_orderBy())) {
-				$order = null;
-			}
-			
-			$responce['data'] = $entityManager->getRepository(Product::class)->findByEntityParam(
-				id: $params->getId(),
-				createdAt: $params->getCreatedAt(),
-				updateAt: $params->getUpdateAt(),
-				title: $params->getTitle(),
-				description: $params->getDescription(),
-				parentId: $params->getParentId(),
-				breadcrumb: $params->getBreadcrumb(),
-				isDelete: $params->getIsDelete(),
-				isHide: $params->getIsHide(),
-				canDelete: $params->getCanDelete(),
-				isMain: $params->getIsMain(),
-				orderBy: $order,
-				limiter: $limiter
-			);
-			
-			if ($params->get_count()) {
-				$limiter = null;
-
-				$responce['count'] = $entityManager->getRepository(Module::class)->getCountByEntityParam(
-					id: $params->getId(),
-					createdAt: $params->getCreatedAt(),
-					updateAt: $params->getUpdateAt(),
-					title: $params->getTitle(),
-					description: $params->getDescription(),
-					parentId: $params->getParentId(),
-					breadcrumb: $params->getBreadcrumb(),
-					isDelete: $params->getIsDelete(),
-					isHide: $params->getIsHide(),
-					canDelete: $params->getCanDelete(),
-					isMain: $params->getIsMain(),
-					orderBy: $order,
-					limiter: $limiter
-				);
-			}
+			//$product = $entityManager->getRepository(Product::class)->find($requestDto->getProduct());
 
 			$responce = true;
 
@@ -91,7 +46,7 @@ class PaymentController extends AbstractController
 		}
 	}
 
-	#[Route(path: '/pay', name: 'api-pay', methods: ['POST'])]
+	#[Route(path: '/pay', name: 'api-pay-process', methods: ['POST'])]
 	public function processPay(
 		Request $request,
 		RequestDecoderInterface $requestDecoder,

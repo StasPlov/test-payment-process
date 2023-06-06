@@ -53,15 +53,11 @@ class ProductRepository extends ServiceEntityRepository
 		?int $id = null,
 		mixed $createdAt = null,
 		mixed $updateAt = null,
-		?string $title = null,
+		?string $name = null,
 		?string $description = null,
-		?int $parentId = null,
-		?int $moduleId = null,
-		?string $breadcrumb = null,
+		?float $price = null,
 		?bool $isDelete = null,
 		?bool $isHide = null,
-		?bool $canDelete = null,
-		?bool $isMain = null,
 
         OrderByInterface $orderBy = null,
         LimiterInterface $limiter = null
@@ -89,14 +85,11 @@ class ProductRepository extends ServiceEntityRepository
 			id: $id,
 			createdAt: $createdAt,
 			updateAt: $updateAt,
-			title: $title,
+			name: $name,
+			price: $price,
 			description: $description,
-			parentId: $parentId,
-			breadcrumb: $breadcrumb,
 			isDelete: $isDelete,
 			isHide: $isHide,
-			canDelete: $canDelete,
-			isMain: $isMain
 		)->getQuery()->getResult(AbstractQuery::HYDRATE_OBJECT) ?? [];
 
 
@@ -109,17 +102,14 @@ class ProductRepository extends ServiceEntityRepository
 
 	private function filter(
 		QueryBuilder $query,
-		array|int $id = null,
+		?int $id = null,
 		mixed $createdAt = null,
 		mixed $updateAt = null,
-		string $title = null,
-		string $description = null,
-		string $parentId = null,
-		string $breadcrumb = null,
-		bool $isDelete = null,
-		bool $isHide = null,
-		bool $canDelete = null,
-		bool $isMain = null
+		?string $name = null,
+		?string $description = null,
+		?float $price = null,
+		?bool $isDelete = null,
+		?bool $isHide = null,
     ) : QueryBuilder {
 		$entityName = $this->entityName;
 
@@ -135,22 +125,17 @@ class ProductRepository extends ServiceEntityRepository
             $query->andWhere("$entityName.updateAt LIKE :updateAt")
             ->setParameter("updateAt", "%$updateAt%");
         }
-		if(isset($title)) {
-            $query->andWhere("$entityName.title LIKE :title")
-            ->setParameter("title", "%$title%");
+		if(isset($name)) {
+            $query->andWhere("$entityName.name LIKE :title")
+            ->setParameter("title", "%$name%");
         }
 		if(isset($description)) {
             $query->andWhere("$entityName.description LIKE :description")
             ->setParameter("description", "%$description%");
         }
-		if(isset($parentId)) {
-			$query->leftJoin("$entityName.parent", "prnt")
-            ->andWhere("prnt = :parentId")
-            ->setParameter("parentId", $parentId);
-        }
-		if(isset($breadcrumb)) {
-            $query->andWhere("$entityName.breadcrumb = :breadcrumb")
-            ->setParameter("breadcrumb", $breadcrumb);
+		if(isset($price)) {
+            $query->andWhere("$entityName.price = :breadcrumb")
+            ->setParameter("breadcrumb", $price);
         }
 		if(isset($isDelete)) {
             $query->andWhere("$entityName.isDelete = :isDelete")
@@ -160,30 +145,19 @@ class ProductRepository extends ServiceEntityRepository
             $query->andWhere("$entityName.isHide = :isHide")
             ->setParameter("isHide", $isHide);
         }
-		if(isset($canDelete)) {
-            $query->andWhere("$entityName.canDelete = :canDelete")
-            ->setParameter("canDelete", $canDelete);
-        }
-		if(isset($isMain)) {
-            $query->andWhere("$entityName.isMain = :isMain")
-            ->setParameter("isMain", $isMain);
-        }
 
         return $query;
     }
 
 	public function getCountByEntityParam(
-		array|int $id = null,
+		?int $id = null,
 		mixed $createdAt = null,
 		mixed $updateAt = null,
-		string $title = null,
-		string $description = null,
-		string $parentId = null,
-		string $breadcrumb = null,
-		bool $isDelete = null,
-		bool $isHide = null,
-		bool $canDelete = null,
-		bool $isMain = null,
+		?string $name = null,
+		?string $description = null,
+		?float $price = null,
+		?bool $isDelete = null,
+		?bool $isHide = null,
 
         OrderByInterface $orderBy = null,
         LimiterInterface $limiter = null
@@ -210,14 +184,11 @@ class ProductRepository extends ServiceEntityRepository
 			id: $id,
 			createdAt: $createdAt,
 			updateAt: $updateAt,
-			title: $title,
+			name: $name,
+			price: $price,
 			description: $description,
-			parentId: $parentId,
-			breadcrumb: $breadcrumb,
 			isDelete: $isDelete,
 			isHide: $isHide,
-			canDelete: $canDelete,
-			isMain: $isMain
 		)->getQuery()->useQueryCache(true)->enableResultCache(3600)->getSingleScalarResult();
     }
 }

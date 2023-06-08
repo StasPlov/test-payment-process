@@ -79,7 +79,7 @@ class ValidateDtoHandler {
 		$this->validate($data);
 
 		$event->setController(
-			function() use ($reflectionMethod, $controller, $parameterName, $data) {
+			static function() use ($reflectionMethod, $controller, $parameterName, $data) {
 				return $reflectionMethod->invokeArgs($controller, [$parameterName => $data]);
 			}
 		);

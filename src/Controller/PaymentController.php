@@ -2,37 +2,58 @@
 
 namespace App\Controller;
 
+use App\Dto\Pay\ProcessDto;
 use App\Dto\Pay\RequestDto;
 use App\Entity\Product;
 use App\Service\PaymentProcessor\PaymentProcessorFactory;
-use App\Service\RequestDecoder\RequestDecoderInterface;
-use App\Service\Validator\Annotations\ValidateDto;
+use App\Service\PaymentUtils\PaymentUtilsInterface;
+use App\Service\Validator\Annotation\ValidateDto;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use JsonException;
 
 #[Route(path: '/api')]
 class PaymentController extends AbstractController
-{
-	#[ValidateDto(class: RequestDto::class)]
+{	
+	private EntityManagerInterface $entityManager;
+	private PaymentUtilsInterface $paymentUtils;
+
+	public function __construct(
+		EntityManagerInterface $entityManager,
+		PaymentUtilsInterface $paymentUtils
+	) {
+		$this->entityManager = $entityManager;
+		$this->paymentUtils = $paymentUtils;
+	}
+
+	#[ValidateDto(data: 'requestDto', class: RequestDto::class)]
 	#[Route(path: '/pay', name: 'api-pay-get', methods: ['GET'])]
 	public function getPay(
-		Request $request,
 		RequestDto $requestDto
 	): Response {
 		try {
-			dd($request);
-
 			/**
 			 * @var Product
 			 */
-			//$product = $entityManager->getRepository(Product::class)->find($requestDto->getProduct());
+			$product = $this->entityManager->getRepository(Product::class)->findOneBy(['id' => $requestDto->getProduct()]);
 
-			$responce = true;
+			if(empty($product)) {
+				throw new JsonException("Products is empty", 400);
+			}
+
+			$coupon = null;
+			if(!empty($requestDto->getCouponCode())) {
+				$coupon = $this->paymentUtils->getCoupon($requestDto->getCouponCode());
+			}
+
+			$responce['data']['price'] = $this->paymentUtils->calculatePrice(
+				$product->getPrice(),
+				$this->paymentUtils->getCountryTaxForTaxNumber((string)$requestDto->getTaxNumber()),
+				$coupon
+			);
 
 			return new JsonResponse($responce, Response::HTTP_OK);
 		} catch (\Throwable $th) {
@@ -46,59 +67,15 @@ class PaymentController extends AbstractController
 		}
 	}
 
+	#[ValidateDto(data: 'processDto', class: ProcessDto::class)]
 	#[Route(path: '/pay', name: 'api-pay-process', methods: ['POST'])]
 	public function processPay(
-		Request $request,
-		RequestDecoderInterface $requestDecoder,
-		EntityManagerInterface $entityManager,
+		ProcessDto $processDto
 	): Response {
 		try {
-			/**
-			 * @var RequestDto
-			 */
-			$params = $requestDecoder->decodeDto($request, RequestDto::class);
-			dd($params);
 
-			$paymentProcessor = PaymentProcessorFactory::createPaymentProcessor($params->getPaymentProcessor());
-
-			/* 
-				product:
-				id  | name | description | price | isDelete | isHide 
-				 1  |Iphone|     NULL    |  100  |   0      |  0
-				 2  |Наушники|   NULL    |  20   |   0      |  0
-				 3  | Чехол |    NULL    |  10   |   0      |  0
-
-
-				country: (странны)
-				code (unique) | name 
-					DE	      | Германия
-					IT	      | Италия
-					GR	      | Греция
-
-				country_tax: (налог для странны при покупки)
-				country_id | tax
-					DE     |  19
-					IT     |  22
-					GR     |  24
-
-				coupons:
-				code (unique) | type_id | discount
-				    D15	      |   2     |    4
-				    D215      |   1     |    8
-
-
-				coupons_type:
-				id | title
-				 1 | фиксированная сумма скидки
-				 2 | процент от суммы покупки
-
-
-
-				(цена продукта 100 евро - 4% скидка c купона + налог 24%)
-
-			*/
-			
-		
+			$paymentProcessor = PaymentProcessorFactory::createPaymentProcessor($processDto->getPaymentProcessor());
+			dd($processDto);
 			/* $limiter = new Limiter($params->get_limit(), $params->get_offset());
 			$order = new OrderBy($params->get_sortBy(), $params->get_orderBy());
 

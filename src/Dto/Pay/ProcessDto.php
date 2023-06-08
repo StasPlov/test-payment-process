@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Validator;
  * @author Stas Plov <SaviouR.S@email.ru>
  * 
  */
-class RequestDto extends DtoAbstract implements DtoInterface {
+class ProcessDto extends DtoAbstract implements DtoInterface {
 
 	#[Validator\NotBlank()]
 	#[Validator\NotNull()]
@@ -24,6 +24,8 @@ class RequestDto extends DtoAbstract implements DtoInterface {
 
     private ?string $couponCode = null;
 
+	#[Validator\NotBlank()]
+	#[Validator\NotNull()]
 	private ?string $paymentProcessor = null;
 
 	/**

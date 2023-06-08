@@ -35,25 +35,7 @@ class PaymentController extends AbstractController
 		RequestDto $requestDto
 	): Response {
 		try {
-			/**
-			 * @var Product
-			 */
-			$product = $this->entityManager->getRepository(Product::class)->findOneBy(['id' => $requestDto->getProduct()]);
-
-			if(empty($product)) {
-				throw new JsonException("Products is empty", 400);
-			}
-
-			$coupon = null;
-			if(!empty($requestDto->getCouponCode())) {
-				$coupon = $this->paymentUtils->getCoupon($requestDto->getCouponCode());
-			}
-
-			$responce['data']['price'] = $this->paymentUtils->calculatePrice(
-				$product->getPrice(),
-				$this->paymentUtils->getCountryTaxForTaxNumber((string)$requestDto->getTaxNumber()),
-				$coupon
-			);
+			$responce['data']['price'] = $this->calcPrice($requestDto);
 
 			return new JsonResponse($responce, Response::HTTP_OK);
 		} catch (\Throwable $th) {
@@ -73,55 +55,13 @@ class PaymentController extends AbstractController
 		ProcessDto $processDto
 	): Response {
 		try {
-
 			$paymentProcessor = PaymentProcessorFactory::createPaymentProcessor($processDto->getPaymentProcessor());
-			dd($processDto);
-			/* $limiter = new Limiter($params->get_limit(), $params->get_offset());
-			$order = new OrderBy($params->get_sortBy(), $params->get_orderBy());
 
-			if ($params->get_nolimit()) {
-				$limiter = null;
+			if(!$paymentProcessor->pay(
+				$this->calcPrice($processDto)
+			)) {
+				throw new \Exception("Payment error", 400);
 			}
-
-			if (empty($params->get_sortBy()) && empty($params->get_orderBy())) {
-				$order = null;
-			}
-			
-			$responce['data'] = $entityManager->getRepository(Module::class)->findByEntityParam(
-				id: $params->getId(),
-				createdAt: $params->getCreatedAt(),
-				updateAt: $params->getUpdateAt(),
-				title: $params->getTitle(),
-				description: $params->getDescription(),
-				parentId: $params->getParentId(),
-				breadcrumb: $params->getBreadcrumb(),
-				isDelete: $params->getIsDelete(),
-				isHide: $params->getIsHide(),
-				canDelete: $params->getCanDelete(),
-				isMain: $params->getIsMain(),
-				orderBy: $order,
-				limiter: $limiter
-			);
-			
-			if ($params->get_count()) {
-				$limiter = null;
-
-				$responce['count'] = $entityManager->getRepository(Module::class)->getCountByEntityParam(
-					id: $params->getId(),
-					createdAt: $params->getCreatedAt(),
-					updateAt: $params->getUpdateAt(),
-					title: $params->getTitle(),
-					description: $params->getDescription(),
-					parentId: $params->getParentId(),
-					breadcrumb: $params->getBreadcrumb(),
-					isDelete: $params->getIsDelete(),
-					isHide: $params->getIsHide(),
-					canDelete: $params->getCanDelete(),
-					isMain: $params->getIsMain(),
-					orderBy: $order,
-					limiter: $limiter
-				);
-			} */
 
 			$responce = true;
 
@@ -135,5 +75,27 @@ class PaymentController extends AbstractController
 
 			return new JsonResponse($th->getMessage(), $errorCode);
 		}
+	}
+
+	private function calcPrice(object $dto): float {
+		/**
+		 * @var Product
+		 */
+		$product = $this->entityManager->getRepository(Product::class)->findOneBy(['id' => $dto->getProduct()]);
+
+		if(empty($product)) {
+			throw new JsonException("Products is empty", 400);
+		}
+
+		$coupon = null;
+		if(!empty($dto->getCouponCode())) {
+			$coupon = $this->paymentUtils->getCoupon($dto->getCouponCode());
+		}
+
+		return $this->paymentUtils->calculatePrice(
+			$product->getPrice(),
+			$this->paymentUtils->getCountryTaxForTaxNumber((string)$dto->getTaxNumber()),
+			$coupon
+		);
 	}
 }

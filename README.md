@@ -1,5 +1,5 @@
 # test-payment-process
-Тестовое задание "test-payment-process", представлелно как API проект, без Form
+Тестовое задание "test-payment-process", представлелно как API проект, без Form.
 Для отправки запроса к эндпоинту рекомендуется использовать Postman, или любой другой HTTP-клиент.
 
 ## Requirements

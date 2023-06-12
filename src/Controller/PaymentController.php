@@ -30,7 +30,7 @@ class PaymentController extends AbstractController
 	}
 
 	#[ValidateDto(data: 'requestDto', class: RequestDto::class)]
-	#[Route(path: '/pay', name: 'api-pay-get', methods: ['GET'])]
+	#[Route(path: '/pay', name: 'api-pay-get', methods: ['GET'], format: 'json')]
 	public function getPay(
 		RequestDto $requestDto
 	): Response {
@@ -50,7 +50,7 @@ class PaymentController extends AbstractController
 	}
 
 	#[ValidateDto(data: 'processDto', class: ProcessDto::class)]
-	#[Route(path: '/pay', name: 'api-pay-process', methods: ['POST'])]
+	#[Route(path: '/pay', name: 'api-pay-process', methods: ['POST'], format: 'json')]
 	public function processPay(
 		ProcessDto $processDto
 	): Response {
